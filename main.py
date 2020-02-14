@@ -3,12 +3,15 @@ from random import randint
 from math import tan
 
 class Bullet():
-    def __init__(self, x, y, power):
+    def __init__(self, x, y, power, tg):
         self.bullet = canvas.create_oval(x, y, x+20+power/3, y-20-power/3, outline='red', fill='#'+gun.color, width=5)
         self.r = 10 + power/6
         self.speed = 2000/power
         self.speed_x = 3 + power/100
-        self.speed_y = -3 + power/100
+        if tg > 0:
+            self.speed_y = -3 + power/100
+        else:
+            self.speed_y = 3 - power/100
         self.collision_amount = 0
         self.move()
 
@@ -21,14 +24,13 @@ class Bullet():
         
         if self.collision_amount == 4:
             self.delete()
-            
 
         self.loop = root.after(int(self.speed), self.move)
 
     def delete(self):
         root.after_cancel(self.loop)
         canvas.delete(self.bullet)
-        gun.bullets[gun.bullets.index(self)] = 'DELETED'
+        del gun.bullets[gun.bullets.index(self)]
         self.speed = 1100000
 
     def collision(self):
@@ -53,6 +55,7 @@ class Target():
         rand_r = randint(10, 40)
         self.r.append(rand_r)
         self.speed = []
+        
         rand_speed = randint(100, 400)/1000
         self.speed.append(rand_speed)
         for i in range(0, 5):
@@ -78,12 +81,12 @@ class Target():
 
     def move(self):
         for i in range(0, 5):
-            canvas.move(self.targets[i], 0, self.speed[i])
+            canvas.move(self.targets[i], 0, self.speed[i]*10)
         self.wall_collision()
         self.bullet_collision()
         if self.score == 5:
             game_over()
-        root.after(1, self.move)
+        root.after(10, self.move)
 
     def wall_collision(self):
         for i in range(0, 5):
@@ -94,7 +97,7 @@ class Target():
     def bullet_collision(self):
         for i in range(0, 5):
             for j in range(0, len(gun.bullets)):
-                if (gun.bullets[j] != 'DELETED') and (self.targets[i] != 'DELETED'):
+                if (self.targets[i] != 'DELETED'):
                     x1 = canvas.coords(self.targets[i])[0] + self.r[i]
                     y1 = canvas.coords(self.targets[i])[3] + self.r[i]
                     x2 = canvas.coords(gun.bullets[j].bullet)[0] + gun.bullets[j].r
@@ -113,19 +116,22 @@ class Target():
 class Gun():
     def __init__(self):
         self.create_random_color()
-        self.gun = canvas.create_line(0, 500, 100, 450, width=5, fill='#000')
+        self.gun = canvas.create_line(0, 250, 50, 150, width=5, fill='#000')
         self.length = 100
         self.bullets = []
+        self.end_game_position = 0
+        self.bullet_amount = 0
 
     def motion(self, event):
         self.event_motion = event
         try:
-            tg = tan((500-event.y)/event.x)
+            tg = tan((250-event.y)/event.x)
             x = (self.length**2/(1+tg**2))**0.5
             y = tg * (self.length**2/(1+tg**2))**0.5
-            canvas.coords(self.gun, 0, 500, x, 500-y)
+            canvas.coords(self.gun, 0, 250, x, 250-y)
         except:
             pass
+
     def create_random_color(self):
         self.color = ''
         for i in range(0, 6):
@@ -155,35 +161,46 @@ class Gun():
     def scale_up(self):
         canvas.itemconfig(self.gun, fill='#'+self.color)
         self.length += 0.3
-        tg = tan((500-self.event_motion.y)/self.event_motion.x)
+        tg = tan((250-self.event_motion.y)/self.event_motion.x)
         x = (self.length**2/(1+tg**2))**0.5
         y = tg * (self.length**2/(1+tg**2))**0.5
-        canvas.coords(self.gun, 0, 500, x, 500-y)
+        canvas.coords(self.gun, 0, 250, x, 250-y)
         self.loop = root.after(5, self.scale_up)
 
     def cancel_scale_up(self):
         root.after_cancel(self.loop)
         canvas.itemconfig(self.gun, fill='#000')
-        tg = tan((500-self.event_motion.y)/self.event_motion.x)
+        tg = tan((250-self.event_motion.y)/self.event_motion.x)
         x = (self.length**2/(1+tg**2))**0.5
         y = tg * (self.length**2/(1+tg**2))**0.5
-        self.bullets.append(Bullet(x, 500-y, self.length))
+        if self.end_game_position == 0:
+            self.bullets.append(Bullet(x, 250-y, self.length, tg))
+            self.bullet_amount += 1
         self.create_random_color()
         self.length = 100
         try:
             x = (self.length**2/(1+tg**2))**0.5
             y = tg * (self.length**2/(1+tg**2))**0.5
-            canvas.coords(self.gun, 0, 500, x, 500-y)
+            canvas.coords(self.gun, 0, 250, x, 250-y)
         except:
-            canvas.coords(self.gun, 0, 500, 0, 400)
+            canvas.coords(self.gun, 0, 250, 0, 350)
+
+    def end_game(self):
+        self.end_game_position = 1
 
 def game_over():
     canvas.delete(gun.gun)
+    gun.end_game()
     for i in range(0, len(gun.bullets)):
         if gun.bullets[i] != 'DELETED':
             canvas.delete(gun.bullets[i])
-    canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(len(gun.bullets)) + ' выстрелов', font='Ubuntu 16')
-
+    length = gun.bullet_amount
+    if length == 1:
+        canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(gun.bullet_amount) + ' выстрел', font='Ubuntu 16')
+    elif length >= 2 and length <= 4:
+        canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(gun.bullet_amount) + ' выстрела', font='Ubuntu 16')
+    else:
+        canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(gun.bullet_amount) + ' выстрелов', font='Ubuntu 16')
 score = 0
 root = tk.Tk()
 root.geometry('500x500')
