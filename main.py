@@ -1,10 +1,10 @@
 import tkinter as tk
 from random import randint
 from math import tan
-
+from tkinter import messagebox as mb
 class Bullet():
     def __init__(self, x, y, power, tg):
-        self.bullet = canvas.create_oval(x, y, x+20+power/3, y-20-power/3, outline='red', fill='#'+gun.color, width=5)
+        self.bullet = canvas.create_oval(x, y, x+20+power/3, y-20-power/3, fill='#'+gun.color)
         self.r = 10 + power/6
         self.speed = 2000/power
         self.speed_x = 3 + power/100
@@ -196,11 +196,13 @@ def game_over():
             canvas.delete(gun.bullets[i])
     length = gun.bullet_amount
     if length == 1:
-        canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(gun.bullet_amount) + ' выстрел', font='Ubuntu 16')
+        text = canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(gun.bullet_amount) + ' выстрел', font='Ubuntu 16')
     elif length >= 2 and length <= 4:
-        canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(gun.bullet_amount) + ' выстрела', font='Ubuntu 16')
+        text = canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(gun.bullet_amount) + ' выстрела', font='Ubuntu 16')
     else:
-        canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(gun.bullet_amount) + ' выстрелов', font='Ubuntu 16')
+        text = canvas.create_text(250, 250, text='Вы уничтожили все цели за ' + str(gun.bullet_amount) + ' выстрелов', font='Ubuntu 16')
+
+
 score = 0
 root = tk.Tk()
 root.geometry('500x500')
