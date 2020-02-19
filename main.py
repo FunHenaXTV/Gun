@@ -2,13 +2,16 @@ import tkinter as tk
 from random import randint
 from math import tan
 from tkinter import messagebox as mb
+from computation import fast_tanh
+
+
 class Bullet():
-    def __init__(self, x, y, power, tg):
+    def __init__(self, x, y, power):
         self.bullet = canvas.create_oval(x, y, x+20+power/3, y-20-power/3, fill='#'+gun.color)
         self.r = 10 + power/6
         self.speed = 2000/power
         self.speed_x = 3 + power/100
-        if tg > 0:
+        if y < 250:
             self.speed_y = -3 + power/100
         else:
             self.speed_y = 3 - power/100
@@ -103,7 +106,7 @@ class Target():
                     x2 = canvas.coords(gun.bullets[j].bullet)[0] + gun.bullets[j].r
                     y2 = canvas.coords(gun.bullets[j].bullet)[3] + gun.bullets[j].r                  
 
-                    if ((x1 - x2)**2 + (y1 - y2)**2)**0.5 - self.r[i] - gun.bullets[j].r < .1:
+                    if ((x1 - x2)**2 + (y1 - y2)**2)**0.5 - self.r[i] - gun.bullets[j].r < 3:
                         self.delete(i)
                         self.score += 1
 
@@ -125,10 +128,10 @@ class Gun():
     def motion(self, event):
         self.event_motion = event
         try:
-            tg = tan((250-event.y)/event.x)
-            x = (self.length**2/(1+tg**2))**0.5
-            y = tg * (self.length**2/(1+tg**2))**0.5
-            canvas.coords(self.gun, 0, 250, x, 250-y)
+            s = fast_tanh(event.x, event.y, self.length)
+            x = s // 10000
+            y = s % 1000
+            canvas.coords(self.gun, 0, 250, x, y)
         except:
             pass
 
@@ -161,29 +164,37 @@ class Gun():
     def scale_up(self):
         canvas.itemconfig(self.gun, fill='#'+self.color)
         self.length += 0.3
-        tg = tan((250-self.event_motion.y)/self.event_motion.x)
-        x = (self.length**2/(1+tg**2))**0.5
-        y = tg * (self.length**2/(1+tg**2))**0.5
-        canvas.coords(self.gun, 0, 250, x, 250-y)
+        try:
+            s = fast_tanh(self.event_motion.x, self.event_motion.y, self.length)
+            x = s // 10000
+            y = s % 1000
+            canvas.coords(self.gun, 0, 250, x, y)
+        except:
+            pass
         self.loop = root.after(5, self.scale_up)
 
     def cancel_scale_up(self):
         root.after_cancel(self.loop)
         canvas.itemconfig(self.gun, fill='#000')
-        tg = tan((250-self.event_motion.y)/self.event_motion.x)
-        x = (self.length**2/(1+tg**2))**0.5
-        y = tg * (self.length**2/(1+tg**2))**0.5
+        try:
+            s = fast_tanh(self.event_motion.x, self.event_motion.y, self.length)
+            x = s // 10000
+            y = s % 1000
+            canvas.coords(self.gun, 0, 250, x, y)
+        except:
+            pass
         if self.end_game_position == 0:
-            self.bullets.append(Bullet(x, 250-y, self.length, tg))
+            self.bullets.append(Bullet(x, y, self.length))
             self.bullet_amount += 1
         self.create_random_color()
         self.length = 100
         try:
-            x = (self.length**2/(1+tg**2))**0.5
-            y = tg * (self.length**2/(1+tg**2))**0.5
-            canvas.coords(self.gun, 0, 250, x, 250-y)
+            s = fast_tanh(self.event_motion.x, self.event_motion.y, self.length)
+            x = s // 10000
+            y = s % 1000
+            canvas.coords(self.gun, 0, 250, x, y)
         except:
-            canvas.coords(self.gun, 0, 250, 0, 350)
+            pass
 
     def end_game(self):
         self.end_game_position = 1
