@@ -106,7 +106,7 @@ class Target():
                     x2 = canvas.coords(gun.bullets[j].bullet)[0] + gun.bullets[j].r
                     y2 = canvas.coords(gun.bullets[j].bullet)[3] + gun.bullets[j].r                  
 
-                    if ((x1 - x2)**2 + (y1 - y2)**2)**0.5 - self.r[i] - gun.bullets[j].r < 3:
+                    if ((x1 - x2)**2 + (y1 - y2)**2)**0.5 - self.r[i] - gun.bullets[j].r < 3.5:
                         self.delete(i)
                         self.score += 1
 
